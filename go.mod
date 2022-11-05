@@ -1,4 +1,4 @@
-module logger
+module github.com/m4schini/logger
 
 go 1.19
 
