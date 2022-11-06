@@ -1,0 +1,15 @@
+level: debug
+development: true
+disableCaller: false
+disableStacktrace: false
+sampling: null
+encoding: json
+outputPaths:
+  - fluentd://
+  - stderr
+errorOutputPaths:
+  - fluentd://
+  - stderr
+fluentd:
+  address: "http://127.0.0.1:9880"
+  name: "loggertest"

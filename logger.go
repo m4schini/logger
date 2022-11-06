@@ -2,6 +2,7 @@ package logger
 
 import (
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 	"strings"
@@ -34,24 +35,23 @@ func init() {
 			log.Fatalln(err)
 		}
 		break
-	case "debug-sink-redis":
-		//err := zap.RegisterSink("redis", func(url *url.URL) (zap.Sink, error) {
-		//	s := NewRedisSink("redis", "")
-		//	s.Key = "log:web-scraper-module"
-		//	return s, nil
-		//})
-		//if err != nil {
-		//	log.Fatalln(err)
-		//}
-		//config := zap.NewProductionConfig()
-		//config.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
-		//config.OutputPaths = []string{"redis"}
-		//config.ErrorOutputPaths = []string{"redis", "stdout"}
-		//logger, err = config.Build()
-		//if err != nil {
-		//	log.Fatalln(err)
-		//}
-		//break
+	case "custom":
+		content, err := os.ReadFile("logging.yml") // the file is inside the local directory
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		var cfg Config
+		err = yaml.Unmarshal(content, &cfg)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		err = Init(cfg)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		break
 	default:
 		logger = zap.NewNop()
 		break
@@ -71,6 +71,23 @@ func Sync() error {
 	return logger.Sync()
 }
 
-func UseLogger(newLogger *zap.Logger) {
+func Init(config Config) error {
+	if config.Fluentd.Address != "" {
+		err := RegisterFluentdSink(config.Fluentd.Address, config.Fluentd.Name)
+		if err != nil {
+			return err
+		}
+	}
+
+	prodCfg := zap.NewProductionConfig()
+	Update(&prodCfg, config)
+	newLogger, err := prodCfg.Build()
+	if err != nil {
+		return err
+	}
+
 	logger = newLogger
+
+	logger.Sugar().Infow("initialized logging with custom config", "cfg", config)
+	return nil
 }
