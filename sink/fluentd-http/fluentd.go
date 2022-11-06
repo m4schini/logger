@@ -18,15 +18,19 @@ func (f *FluentdHttpSink) Write(p []byte) (n int, err error) {
 	r, err := http.Post(f.FluentdAddress.String(),
 		"application/json",
 		strings.NewReader(string(p)))
-	if r.StatusCode != http.StatusOK {
-		b, err := io.ReadAll(r.Body)
-		if err != nil {
-			return 0, err
-		}
-
-		return 0, fmt.Errorf("%v", string(b))
+	if err != nil {
+		return 0, err
 	}
-	return len(p), err
+	if r.StatusCode == http.StatusOK {
+		return len(p), nil
+	}
+
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		return 0, err
+	}
+
+	return 0, fmt.Errorf("%v", string(b))
 }
 
 func (f *FluentdHttpSink) Sync() error {
