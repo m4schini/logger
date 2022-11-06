@@ -9,9 +9,17 @@ import (
 )
 
 var logger *zap.Logger = nil
+var Cfg *Config
 
 func init() {
 	var err error
+
+	if Cfg != nil {
+		err := applyConfig(*Cfg)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
 
 	lvl := os.Getenv("LOGGING_LEVEL")
 	switch strings.ToLower(lvl) {
@@ -47,7 +55,7 @@ func init() {
 			log.Fatalln(err)
 		}
 
-		err = Init(cfg)
+		err = applyConfig(cfg)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -73,7 +81,7 @@ func Sync() error {
 	return logger.Sync()
 }
 
-func Init(config Config) error {
+func applyConfig(config Config) error {
 	if config.Fluentd.Address != "" {
 		err := RegisterFluentdSink(config.Fluentd.Address, config.Fluentd.Name)
 		if err != nil {
