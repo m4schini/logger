@@ -61,6 +61,7 @@ func init() {
 		break
 	case "disabled":
 		logger = zap.NewNop()
+		initWG.Done()
 		break
 	default:
 		break
@@ -97,7 +98,7 @@ func Init(config Config) error {
 		return err
 	}
 
-	logger = newLogger
+	*logger = *newLogger
 	initWG.Done()
 
 	logger.Sugar().Infow("initialized logging with custom config", "cfg", config)
