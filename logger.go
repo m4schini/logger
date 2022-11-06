@@ -6,14 +6,11 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 )
 
-var initWG sync.WaitGroup
 var logger *zap.Logger = nil
 
 func init() {
-	initWG.Add(1)
 	var err error
 
 	lvl := os.Getenv("LOGGING_LEVEL")
@@ -23,7 +20,6 @@ func init() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		initWG.Done()
 		break
 	case "debug":
 		config := zap.NewProductionConfig()
@@ -32,14 +28,12 @@ func init() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		initWG.Done()
 		break
 	case "dev":
 		logger, err = zap.NewDevelopment()
 		if err != nil {
 			log.Fatalln(err)
 		}
-		initWG.Done()
 		break
 	case "custom":
 		content, err := os.ReadFile("logging.yml") // the file is inside the local directory
@@ -57,11 +51,9 @@ func init() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		initWG.Done()
 		break
 	case "disabled":
 		logger = zap.NewNop()
-		initWG.Done()
 		break
 	default:
 		break
@@ -69,8 +61,6 @@ func init() {
 }
 
 func Named(names ...string) *zap.Logger {
-	initWG.Wait()
-
 	subLogger := logger.Sugar()
 	for _, name := range names {
 		subLogger.Named(name)
@@ -99,7 +89,6 @@ func Init(config Config) error {
 	}
 
 	*logger = *newLogger
-	initWG.Done()
 
 	logger.Sugar().Infow("initialized logging with custom config", "cfg", config)
 	return nil
