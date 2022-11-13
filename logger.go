@@ -11,7 +11,7 @@ func init() {
 	var err error
 
 	var config zap.Config
-	if config.Development {
+	if DevelopmentMode {
 		config = zap.NewDevelopmentConfig()
 	} else {
 		config = zap.NewProductionConfig()
