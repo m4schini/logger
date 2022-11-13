@@ -10,7 +10,12 @@ var logger *zap.Logger = nil
 func init() {
 	var err error
 
-	config := zap.NewProductionConfig()
+	var config zap.Config
+	if config.Development {
+		config = zap.NewDevelopmentConfig()
+	} else {
+		config = zap.NewProductionConfig()
+	}
 	config.Level = Level
 	config.Development = DevelopmentMode
 	config.Encoding = Encoding
